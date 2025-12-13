@@ -1,151 +1,134 @@
 import json
-import os
 
-# Имя файла для хранения данных
-filename = "cities.json"
-
-# Счетчик операций
-operations_count = 0
-
-# Загрузка данных из файла
-if os.path.exists(filename):
-    with open(filename, 'r', encoding='utf-8') as file:
-        cities = json.load(file)
-else:
-    # Начальные данные (5 записей)
-    cities = [
-        {"id": 1, "name": "Москва", "country": "Россия", "is_big": True, "people_count": 12600000},
-        {"id": 2, "name": "Минск", "country": "Беларусь", "is_big": True, "people_count": 2000000},
-        {"id": 3, "name": "Брест", "country": "Беларусь", "is_big": True, "people_count": 340000},
-        {"id": 4, "name": "Гродно", "country": "Беларусь", "is_big": True, "people_count": 368000},
-        {"id": 5, "name": "Полоцк", "country": "Беларусь", "is_big": False, "people_count": 82000}
-    ]
-    with open(filename, 'w', encoding='utf-8') as file:
-        json.dump(cities, file, ensure_ascii=False, indent=2)
-
-# Основной цикл программы
-while True:
+# Функции
+def show_menu():
     print("\n" + "="*50)
     print("МЕНЮ:")
-    print("1. Вывести все записи")
-    print("2. Вывести запись по полю")
-    print("3. Добавить запись")
-    print("4. Удалить запись по полю")
-    print("5. Выйти из программы")
+    print("1. Показать все города")
+    print("2. Найти город")
+    print("3. Добавить город")
+    print("4. Удалить город")
+    print("5. Выход")
     print("="*50)
-    
-    choice = input("Выберите пункт меню (1-5): ")
-    
-    if choice == "1":
-        # Вывести все записи
-        print("\n" + "="*50)
-        print("ВСЕ ЗАПИСИ О ГОРОДАХ:")
-        print("="*50)
+
+def add_city(cities, filename):
+    try:
+        city_id = int(input("Введите ID города: "))
+        name = input("Введите название города: ").strip()
+        population = int(input("Введите население города: "))
+        region = input("Введите регион: ").strip()
+        
+        # Проверка ID
         for city in cities:
-            big_status = "Большой город" if city["is_big"] else "Маленький город"
-            print(f"ID: {city['id']}")
-            print(f"Город: {city['name']}")
-            print(f"Страна: {city['country']}")
-            print(f"Статус: {big_status}")
-            print(f"Население: {city['people_count']} чел.")
-            print("-" * 30)
-        operations_count += 1
-    
-    elif choice == "2":
-        # Вывести запись по полю
-        try:
-            search_id = int(input("Введите ID города для поиска: "))
-            found = False
-            for i, city in enumerate(cities):
-                if city["id"] == search_id:
-                    print("\n" + "="*50)
-                    print(f"НАЙДЕНА ЗАПИСЬ (позиция {i}):")
-                    print("="*50)
-                    big_status = "Большой город" if city["is_big"] else "Маленький город"
-                    print(f"ID: {city['id']}")
-                    print(f"Город: {city['name']}")
-                    print(f"Страна: {city['country']}")
-                    print(f"Статус: {big_status}")
-                    print(f"Население: {city['people_count']} чел.")
-                    found = True
-                    break
-            
-            if not found:
-                print("\n Запись с таким ID не найдена!")
-            else:
-                operations_count += 1
+            if city["id"] == city_id:
+                print(f" Ошибка: город с ID {city_id} уже есть!")
+                return cities, False
+        
+        # Добавляем город
+        new_city = {
+            "id": city_id,
+            "name": name,
+            "population": population,
+            "region": region
+        }
+        cities.append(new_city)
+        
+        # Сохраняем
+        with open(filename, 'w', encoding='utf-8') as file:
+            json.dump(cities, file, ensure_ascii=False, indent=2)
+        
+        print(f" Город {name} добавлен!")
+        return cities, True
+        
+    except ValueError:
+        print(" Ошибка: ID и население должны быть числами!")
+        return cities, False
+
+def delete_city(cities, filename):
+    try:
+        delete_id = int(input("Введите ID города для удаления: "))
+        
+        for i, city in enumerate(cities):
+            if city["id"] == delete_id:
+                deleted_city = cities.pop(i)
                 
-        except ValueError:
-            print("\n Ошибка: ID должен быть числом!")
-    
-    elif choice == "3":
-        # Добавить запись
-        try:
-            print("\nДОБАВЛЕНИЕ НОВОЙ ЗАПИСИ:")
-            new_id = int(input("Введите ID: "))
-            
-            # Проверка на уникальность ID
-            for city in cities:
-                if city["id"] == new_id:
-                    print(" Ошибка: Город с таким ID уже существует!")
-                    break
-            else:
-                name = input("Введите название города: ")
-                country = input("Введите название страны: ")
-                people_count = int(input("Введите население города: "))
-                is_big = people_count > 100000
-                
-                new_city = {
-                    "id": new_id,
-                    "name": name,
-                    "country": country,
-                    "is_big": is_big,
-                    "people_count": people_count
-                }
-                cities.append(new_city)
-                
-                # Сохранение в файл
                 with open(filename, 'w', encoding='utf-8') as file:
                     json.dump(cities, file, ensure_ascii=False, indent=2)
                 
-                print(" Запись успешно добавлена!")
-                operations_count += 1
-                
-        except ValueError:
-            print(" Ошибка: ID и население должны быть числами!")
-    
-    elif choice == "4":
-        # Удалить запись по полю
-        try:
-            delete_id = int(input("Введите ID города для удаления: "))
-            found = False
+                print(f" Город {deleted_city['name']} удален!")
+                return cities, True
+        
+        print(" Город с таким ID не найден!")
+        return cities, False
             
-            for i, city in enumerate(cities):
-                if city["id"] == delete_id:
-                    deleted_city = cities.pop(i)
-                    
-                    # Сохранение в файл
-                    with open(filename, 'w', encoding='utf-8') as file:
-                        json.dump(cities, file, ensure_ascii=False, indent=2)
-                    
-                    print(f" Запись с ID {delete_id} ({deleted_city['name']}) удалена!")
-                    found = True
-                    operations_count += 1
-                    break
-            
-            if not found:
-                print(" Запись с таким ID не найдена!")
-                
-        except ValueError:
-            print(" Ошибка: ID должен быть числом!")
-    
-    elif choice == "5":
-        # Выйти из программы
-        print("\n" + "="*50)
-        print(f"ПРОГРАММА ЗАВЕРШЕНА")
-        print(f"Всего выполнено операций: {operations_count}")
-        print("="*50)
-        break
-    
+    except ValueError:
+        print(" Ошибка: ID должен быть числом!")
+        return cities, False
+
+def show_all(cities):
+    if not cities:
+        print(" Список пуст!")
     else:
-        print(" Ошибка: выберите пункт от 1 до 5!")
+        for city in cities:
+            print(f"ID: {city['id']}, Город: {city['name']}, "
+                  f"Население: {city['population']}, Регион: {city['region']}")
+
+def find_city(cities):
+    name = input("Введите название города: ").strip().lower()
+    found = []
+    
+    for city in cities:
+        if name in city["name"].lower():
+            found.append(city)
+    
+    if found:
+        for city in found:
+            print(f"ID: {city['id']}, Город: {city['name']}")
+    else:
+        print(" Город не найден!")
+
+def exit_prog(operations_count):
+    print("\n" + "="*50)
+    print(f"Всего операций: {operations_count}")
+    print("Выход")
+    print("="*50)
+
+# Основная программа
+def main():
+    filename = "cities.json"
+    operations_count = 0
+    cities = []
+    
+    # Загрузка данных
+    try:
+        with open(filename, 'r', encoding='utf-8') as file:
+            cities = json.load(file)
+    except:
+        print(" Файл не найден, начинаем с пустого списка")
+    
+    # Главный цикл
+    while True:
+        show_menu()
+        choice = input("Выберите: ")
+        
+        if choice == "1":
+            show_all(cities)
+        elif choice == "2":
+            find_city(cities)
+        elif choice == "3":
+            cities, success = add_city(cities, filename)
+            if success:
+                operations_count += 1
+        elif choice == "4":
+            cities, success = delete_city(cities, filename)
+            if success:
+                operations_count += 1
+        elif choice == "5":
+            exit_prog(operations_count)
+            break
+        else:
+            print(" Ошибка: выберите 1-5!")
+
+# Запуск
+if name == "main":
+    main()
